@@ -171,8 +171,8 @@ input {
     font-size: 18px;
     border-radius: 12px;
     background: var(--colorlht);
-    box-shadow: 5px 5px 20px var(--lhtShdw),
-        -5px -5px 20px var(--colorlht);
+    /* box-shadow: 5px 5px 20px var(--lhtShdw),
+        -5px -5px 20px var(--colorlht); */
     transition: 0.3s;
 }
 
@@ -481,10 +481,10 @@ button {
     background-image: var(--graddrk);
 }
 
-.darkMode input {
+/* .darkMode input {
     box-shadow: 5px 5px 20px var(--drkshdw),
         -5px -5px 20px var(--clrdrk);
-}
+} */
 
 .darkMode .message {
     color: var(--drkwarning);
