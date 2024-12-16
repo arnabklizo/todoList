@@ -329,8 +329,11 @@ button:active {
     border-radius: 2px;
     appearance: none;
     background-color: var(--clrwht1) !important;
+    background: var(--clrwht1);
     transition: all .3s;
     margin-left: 20px;
+    border: 1px solid #bbb;
+    box-shadow: none;
 }
 
 .taskCheckbox::before {

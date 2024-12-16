@@ -2,119 +2,89 @@ const addBtn = document.querySelector('.addBtn');
 const message = document.querySelector('.message');
 const list = document.querySelector(".list");
 const checkbox = document.querySelector('#checkbox');
-const themeBox = document.querySelector('.themeBox')
-const deleteSelectedBtn = document.querySelector('.deleteSelectedBtn')
-
+const themeBox = document.querySelector('.themeBox');
+const deleteSelectedBtn = document.querySelector('.deleteSelectedBtn');
 
 const confirmationModal = document.querySelector(".confirmationModal");
 const confirmDeleteBtn = document.querySelector("#confirmDeleteBtn");
 const cancelDeleteBtn = document.querySelector("#cancelDeleteBtn");
 
-
 // declarations completed 
 let taskToDelete = null;
 
-
-// geting data from local storage 
-function getFromLocalStorage() {
-    let todolist = JSON.parse(localStorage.getItem("todolist")) || [];
-    return todolist
-}
-
-// set to local storage 
-function setToLoaclStorage(data) {
+// set up local storage 
+function setToLocalStorage(data) {
     localStorage.setItem("todolist", JSON.stringify(data));
 }
 
-// delete-button show hide 
-function deleteShowHide(todolist) {
-    if (todolist.length === 0) {
-        deleteSelectedBtn.style.display = 'none'
-    }
-    else {
-        deleteSelectedBtn.style.display = 'block'
-    }
+// getting data from local storage 
+function getFromLocalStorage() {
+    return JSON.parse(localStorage.getItem("todolist")) || [];
 }
 
 
-function loadList() {
-    const todolist = getFromLocalStorage()
+// delete-button show hide 
+function deleteShowHide(todolist) {
+    deleteSelectedBtn.style.display = todolist.length < 2 ? 'none' : 'block';
+}
 
+
+// load task list from localStorage
+function loadList() {
+    const todolist = getFromLocalStorage();
     todolist.forEach(listItems => showInList(listItems.text, listItems.cmp, listItems.id));
 
     const mode = localStorage.getItem("mode");
-    if (mode == 'dark') {
+    if (mode === 'dark') {
         document.body.classList.add('darkMode');
         checkbox.checked = true;
     }
 
-    // delete-button show hide 
-    deleteShowHide(todolist)
+    deleteShowHide(todolist);
 }
 
-
-document.addEventListener("DOMContentLoaded", loadList); // on load data from local store will refresh
-
-
+document.addEventListener("DOMContentLoaded", loadList);
 
 // theme changer 
-themeBox.addEventListener('click', themechanger)
-function themechanger() {  // on click checkbox
+themeBox.addEventListener('click', () => {
     document.body.classList.toggle('darkMode', checkbox.checked);
     localStorage.setItem("mode", checkbox.checked ? "dark" : "light");
-}
+});
 
-
-
-// after click on add-task button 
 addBtn.addEventListener('click', function () {
     const taskInput = document.querySelector("#inputText");
-    const listText = taskInput.value.trim();                    //get input value and trim
+    const listText = taskInput.value.trim();
 
-    if (listText === "") {                                      // if input value is empty
+    if (listText === "") {
         message.style.display = 'block';
         message.textContent = 'Please enter task';
 
         setTimeout(function () {
             message.style.display = "none";
-        }, 1000); // Hide the message after 1 second
+        }, 1000);
         return;
     }
 
-
     const newTaskId = Date.now();
-    saveInSpan(listText, newTaskId);
+    saveInLocalStorage(listText, newTaskId);
     showInList(listText, false, newTaskId);
-    taskInput.value = ""; //make input value=blank
-})
+    taskInput.value = "";
+});
 
-
-
-// save the list 
-function saveInSpan(text) {
-
-
-    const todolist = getFromLocalStorage()
-    const newTask = {
-        id: Date.now(),
-        text,
-        cmp: false
-    };
+// save task in localStorage
+function saveInLocalStorage(text, id) {
+    const todolist = getFromLocalStorage();
+    const newTask = { id, text, cmp: false };
     todolist.push(newTask);
-    setToLoaclStorage(todolist)
-
-    // delete-button show hide 
+    setToLocalStorage(todolist);
     deleteShowHide(todolist);
 }
 
-
-// display list 
-
+// display task in list
 function showInList(text, cmp = false, id) {
     const li = document.createElement("li");
     li.className = cmp ? "completed" : "";
-    li.dataset.id = id;  // Store the task's unique ID in the data attribute
-
+    li.dataset.id = id;
 
     const textspan = document.createElement("span");
     textspan.textContent = text;
@@ -127,11 +97,16 @@ function showInList(text, cmp = false, id) {
     const completeButton = document.createElement("button");
     completeButton.innerHTML = '<span></span><span></span>';
     completeButton.classList.add('tickBtn');
-    completeButton.onclick = () => tickCross(li);
+    completeButton.onclick = () => toggleComplete(li);
 
     const checkboxInput = document.createElement("input");
     checkboxInput.type = "checkbox";
     checkboxInput.classList.add("taskCheckbox");
+
+    const totalTasks = document.querySelectorAll('.list li').length;
+
+
+    li.appendChild(checkboxInput);
 
 
     const buttonspan = document.createElement("span");
@@ -146,70 +121,53 @@ function showInList(text, cmp = false, id) {
     li.appendChild(completeSpan);
 
     list.prepend(li);
+
 }
 
 
-// cross/save btn 
-function tickCross(tsk) {                                  // on click tick/cross button
-    const taskId = tsk.dataset.id;
-    let todolist = getFromLocalStorage()
-
-    todolist = todolist.map(list => {
-        if (list.id === parseInt(taskId)) {
-            list.cmp = !list.cmp;
+// toggle task completion status
+function toggleComplete(task) {
+    const taskId = task.dataset.id;
+    let todolist = getFromLocalStorage();
+    todolist = todolist.map(item => {
+        if (item.id === parseInt(taskId)) {
+            item.cmp = !item.cmp;
         }
-        return list;
+        return item;
     });
-
-    setToLoaclStorage(todolist)
-    tsk.classList.toggle("completed");
+    setToLocalStorage(todolist);
+    task.classList.toggle("completed");
 }
 
-
-// for remove 
-function removeList(rmvtsk) {
-    taskToDelete = rmvtsk;
+// remove task from list
+function removeList(task) {
+    taskToDelete = task;
     confirmationModal.style.display = "flex";
 }
 
-// if clicked on no 
+// Cancel delete
 cancelDeleteBtn.addEventListener('click', () => {
     taskToDelete = null;
     confirmationModal.style.display = "none";
 });
 
-
-// Set up the event listeners for the buttons
+// Confirm delete
 confirmDeleteBtn.addEventListener('click', () => {
     if (taskToDelete) {
         const taskId = taskToDelete.dataset.id;
-
-
         let todolist = getFromLocalStorage();
         todolist = todolist.filter(list => list.id !== parseInt(taskId));
-        setToLoaclStorage(todolist);
-
+        setToLocalStorage(todolist);
         taskToDelete.remove();
         taskToDelete = null;
-
-
         confirmationModal.style.display = "none";
-
-        // Delete-button show hide 
         deleteShowHide(todolist);
     }
 });
 
-
-
-
-
-
-// Update the deleteSelectedBtn event listener
+// Delete selected tasks
 deleteSelectedBtn.addEventListener("click", () => {
-
     const checkedTasks = document.querySelectorAll('.taskCheckbox:checked');
-
 
     if (checkedTasks.length === 0) {
         message.style.display = 'block';
@@ -221,34 +179,34 @@ deleteSelectedBtn.addEventListener("click", () => {
         return;
     }
 
+    if (checkedTasks.length < 2) {
+        message.style.display = 'block';
+        message.textContent = 'Please select more than one item to delete';
+
+        setTimeout(function () {
+            message.style.display = "none";
+        }, 1000);
+        return;
+    }
 
     confirmationModal.style.display = "flex";
 
-
     const tasksToDelete = Array.from(checkedTasks).map(task => task.closest('li'));
-
 
     confirmDeleteBtn.onclick = () => {
         let todolist = getFromLocalStorage();
-
         tasksToDelete.forEach(task => {
             const taskId = task.dataset.id;
             todolist = todolist.filter(list => list.id !== parseInt(taskId)); // Remove by ID
             task.remove();
         });
-
-
-        setToLoaclStorage(todolist);
-
-
+        setToLocalStorage(todolist);
         confirmationModal.style.display = "none";
-
-
         deleteShowHide(todolist);
     };
-
 
     cancelDeleteBtn.onclick = () => {
         confirmationModal.style.display = "none";
     };
 });
+
